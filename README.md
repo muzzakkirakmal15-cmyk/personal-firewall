@@ -28,6 +28,35 @@ sudo python3 firewall.py flush           # undo
 { "action": "block", "direction": "out", "protocol": "tcp", "port": 23, "dst": "203.0.113.0/24", "comment": "example" }
 ```
 
+## Sample output
+
+Self test:
+```
+$ python3 firewall.py test
+All self tests passed.
+```
+
+Monitor mode (`firewall.log`, from a real run on macOS). Outgoing traffic is allowed, replies to it are recognised as established connections, and unsolicited incoming broadcasts from another device on the LAN are blocked by the default policy:
+```
+ALLOW out udp   192.168.1.17:1537 -> 192.168.1.1:53 (default policy)
+ALLOW in  udp   192.168.1.1:53 -> 192.168.1.17:1537 (established connection)
+ALLOW out tcp   192.168.1.17:49247 -> 140.82.114.25:443 (default policy)
+ALLOW in  tcp   140.82.114.25:443 -> 192.168.1.17:49247 (established connection)
+ALLOW out icmp  192.168.1.17:- -> 142.251.223.238:- (default policy)
+ALLOW in  icmp  142.251.223.238:- -> 192.168.1.17:- (established connection)
+BLOCK in  udp   192.168.1.3:46129 -> 192.168.1.255:15600 (default policy)
+```
+
+Enforce mode, `--dry-run` (generated iptables commands, excerpt):
+```
+iptables -N PERSONAL_FW_IN
+iptables -I INPUT 1 -j PERSONAL_FW_IN
+iptables -A PERSONAL_FW_IN -i lo -j ACCEPT
+iptables -A PERSONAL_FW_IN -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A PERSONAL_FW_IN -p tcp --dport 22 -j ACCEPT
+iptables -A PERSONAL_FW_OUT -p tcp --dport 23 -j DROP
+```
+
 ## How it works
 Packets are matched against rules in order. In enforce mode the same rules are translated into iptables commands so the kernel drops or accepts packets. Monitor mode only observes; it cannot drop packets.
 
