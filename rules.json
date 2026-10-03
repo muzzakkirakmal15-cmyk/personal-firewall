@@ -1,0 +1,9 @@
+{
+  "default_policy": { "in": "block", "out": "allow" },
+  "rules": [
+    { "action": "allow", "direction": "in",  "protocol": "tcp", "port": 22,  "comment": "SSH in" },
+    { "action": "block", "direction": "out", "protocol": "tcp", "port": 23,  "comment": "no telnet out" },
+    { "action": "block", "direction": "out", "dst": "203.0.113.0/24",        "comment": "blocked test network" },
+    { "action": "block", "direction": "in",  "protocol": "icmp",              "comment": "ignore pings" }
+  ]
+}
